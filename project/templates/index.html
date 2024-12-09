@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined Visualization App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #0056b3;
+        }
+        h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #003d80;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .form-container {
+            margin-top: 20px;
+        }
+        .plot-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Combined Visualization App</h1>
+
+        <!-- Error Display -->
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <!-- Dropdown to Select Visualization -->
+        <label for="appSelection">Choose a Visualization:</label>
+        <select id="appSelection" onchange="showForm()">
+            <option value="" selected disabled>Select an option</option>
+            <option value="app1" {% if plot1_generated %}selected{% endif %}>Drain Current vs. Drain Voltage</option>
+            <option value="app2" {% if plot2_generated %}selected{% endif %}>Electrons in Dot vs. Gate Voltage</option>
+        </select>
+
+        <!-- App 1 Form -->
+        <div id="app1Form" class="form-container" style="display: none;">
+            <h2>Drain Current vs. Drain Voltage</h2>
+            <form action="/app1" method="POST">
+                <label for="Vg">Gate Voltage (Vg):</label>
+                <input type="number" id="Vg" name="Vg" step="0.01" required>
+                <label for="temp">Temperature (K):</label>
+                <input type="number" id="temp" name="temp" step="0.01" required>
+                <button type="submit">Generate Plot</button>
+            </form>
+            {% if plot1_generated %}
+            <div class="plot-container">
+                <h2>Generated Plot (App 1):</h2>
+                <img src="{{ url_for('static', filename='I_vs_Vd.png') }}?{{ time }}" alt="Drain Current vs. Drain Voltage Plot">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- App 2 Form -->
+        <div id="app2Form" class="form-container" style="display: none;">
+            <h2>Electrons in Dot vs. Gate Voltage</h2>
+            <form action="/app2" method="POST">
+                <label for="Nmin">Minimum Number of Electrons (Nmin):</label>
+                <input type="number" id="Nmin" name="Nmin" required>
+                <label for="Nmax">Maximum Number of Electrons (Nmax):</label>
+                <input type="number" id="Nmax" name="Nmax" required>
+                <button type="submit">Generate Plot</button>
+            </form>
+            {% if plot2_generated %}
+            <div class="plot-container">
+                <h2>Generated Plot (App 2):</h2>
+                <img src="{{ url_for('static', filename='electrons_vs_vg.png') }}?{{ time }}" alt="Electrons in Dot vs. Gate Voltage Plot">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Function to show the corresponding form based on the dropdown selection
+        function showForm() {
+            const selection = document.getElementById('appSelection').value;
+            document.getElementById('app1Form').style.display = selection === 'app1' ? 'block' : 'none';
+            document.getElementById('app2Form').style.display = selection === 'app2' ? 'block' : 'none';
+        }
+
+        // Automatically show the correct form if a plot is generated
+        document.addEventListener("DOMContentLoaded", () => {
+            {% if plot1_generated %}
+            document.getElementById('appSelection').value = 'app1';
+            document.getElementById('app1Form').style.display = 'block';
+            {% elif plot2_generated %}
+            document.getElementById('appSelection').value = 'app2';
+            document.getElementById('app2Form').style.display = 'block';
+            {% endif %}
+        });
+    </script>
+</body>
+</html>
